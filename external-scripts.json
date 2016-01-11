@@ -10,5 +10,6 @@
   "hubot-rules",
   "hubot-shipit",
   "hubot-assembla",
-  "hubot-standup-alarm"
+  "hubot-standup-alarm",
+  "hubot-voting"
 ]
