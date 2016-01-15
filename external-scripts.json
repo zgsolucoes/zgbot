@@ -11,5 +11,6 @@
   "hubot-shipit",
   "hubot-assembla",
   "hubot-standup-alarm",
-  "hubot-voting"
+  "hubot-voting",
+  "hubot-youtube"
 ]
