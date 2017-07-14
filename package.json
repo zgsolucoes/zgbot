@@ -14,7 +14,7 @@
     "hubot-heroku-keepalive": "^1.0.2",
     "hubot-maps": "0.0.2",
     "hubot-redis-brain": "0.0.3",
-    "hubot-remind": "^0.1.5",
+    "hubot-remind-her": "github:mx4492/hubot-remind-her",
     "hubot-rules": "^0.1.1",
     "hubot-scripts": "^2.16.2",
     "hubot-shipit": "^0.2.0",
