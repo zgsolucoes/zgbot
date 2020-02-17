@@ -7,8 +7,51 @@
 #   Uncomment the ones you want to try and experiment with.
 #
 #   These are from the scripting documentation: https://github.com/github/hubot/blob/master/docs/scripting.md
+#
+uncamelize = (str) ->
+  str
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/\b([A-Z]+)([A-Z])([a-z])/, '$1 $2$3')
+    .replace(/^./,  (str) -> str.toUpperCase())
+    .replace(/[Dd]e\s*/, '')
+
+find_or_create_ticket = (msg, cb) ->
+  msg.robot.assembla.api_call msg, "spaces/zg-devops/tickets?per_page=50&sort_order=desc&sort_by=created_on", (data) ->
+    tickets = data.filter((t) -> (t.summary.toLowerCase().indexOf('subir versão corretiva') > -1) and (new Date().getDate() == new Date(t.created_on).getDate()))
+    ticket = tickets[0]
+
+    if tickets.length > 0
+      msg.send "Foram encontrados mas de um ticket de subida de versão hoje, usando o ##{ticket.number}"
+
+    if ticket == undefined
+      # TODO: criar ticket quando não houver
+      msg.send 'Parece que não foi criado nenhum ticket para a versão corretiva de hoje, vá lá crie um com o nome "Subir versão corretiva" e reenvie a mensagem'
+    else
+      cb(ticket)
 
 module.exports = (robot) ->
+  versao_rgx = /versao(\w*)\.add\(\s*['"]([^']*)['"]\s*,\s*['"]([^']*)['"]\s*(?:,\s*['"]([^']*)['"])?\s*\)/ig
+  robot.hear versao_rgx, (msg) ->
+    matches = versao_rgx.exec(msg.match[0])
+
+    horario = uncamelize(matches[1].trim())
+    projeto = matches[2].trim()
+    versao = matches[3].trim()
+    ambientes = matches[4]?.trim() or 'todos'
+
+    ticket = find_or_create_ticket msg, (ticket) ->
+      description = ticket.description
+
+      if description.indexOf(projeto) > -1
+        msg.send "Projeto já encontrando na lista, para adicioná-lo novamente remova do ticket atual: https://app.assembla.com/spaces/zg-devops/tickets/#{ticket.number}/details"
+        msg.send 'Ou implemente o bot pra descobrir duplicatas e resolver sozinho por horário :mauro:'
+      else
+        corpo = JSON.stringify({ ticket: { description: "#{description}\nServiço: #{projeto}\nAmbiente: #{ambientes}\nBranch: #{versao}" }})
+        console.log(corpo)
+        robot.assembla.api_call msg, "spaces/zg-devops/tickets/#{ticket.number}", (res) ->
+          msg.send "Nova versão adicionada ao ticket com sucesso"
+        , '', 'put', corpo, 'application/json'
+
 
   # robot.hear /badger/i, (res) ->
   #   res.send "Badgers? BADGERS? WE DON'T NEED NO STINKIN BADGERS"
