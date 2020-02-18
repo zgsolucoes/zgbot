@@ -20,7 +20,7 @@ find_or_create_ticket = (msg, cb) ->
     tickets = data.filter((t) -> (t.summary.toLowerCase().indexOf('subir versão corretiva') > -1) and (new Date().getDate() == new Date(t.created_on).getDate()))
     ticket = tickets[0]
 
-    if tickets.length > 0
+    if tickets.length > 1
       msg.send "Foram encontrados mas de um ticket de subida de versão hoje, usando o ##{ticket.number}"
 
     if ticket == undefined
