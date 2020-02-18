@@ -13,7 +13,6 @@ uncamelize = (str) ->
     .replace(/([a-z])([A-Z])/g, '$1 $2')
     .replace(/\b([A-Z]+)([A-Z])([a-z])/, '$1 $2$3')
     .replace(/^./,  (str) -> str.toUpperCase())
-    .replace(/[Dd]e\s*/, '')
 
 find_or_create_ticket = (msg, cb) ->
   msg.robot.assembla.api_call msg, "spaces/zg-devops/tickets?per_page=50&sort_order=desc&sort_by=created_on", (data) ->
@@ -46,10 +45,14 @@ module.exports = (robot) ->
         msg.send "Projeto já encontrando na lista, para adicioná-lo novamente remova do ticket atual: https://app.assembla.com/spaces/zg-devops/tickets/#{ticket.number}/details"
         msg.send 'Ou implemente o bot pra descobrir duplicatas e resolver sozinho por horário :mauro:'
       else
-        corpo = JSON.stringify({ ticket: { description: "#{description}\n\nServiço: #{projeto}\nAmbiente: #{ambientes}\nBranch: #{versao}" }})
-        console.log(corpo)
-        robot.assembla.api_call msg, "spaces/zg-devops/tickets/#{ticket.number}", (res) ->
-          msg.send "Nova versão adicionada ao ticket com sucesso"
+        corpo = JSON.stringify({ ticket: { description: "#{description?.trim()}\n\n\#Versão de #{horario}\nServiço: #{projeto}\nAmbiente: #{ambientes}\nBranch: #{versao}\n" }})
+        robot.assembla.api_call msg, "spaces/zg-devops/tickets/#{ticket.number}", (res, err, reso) ->
+          if err
+            console.error(err)
+            robot.messageRoom "devops", "Erro ao cadastrar nova versão #{corpo} no ticket ##{ticket.number}: #{JSON.stringify(res)}"
+            msg.send "Oops, aconteceu um erro ao cadastrar nova versão, peça ajuda aos devops ou faça na mão mesmo"
+          else
+            msg.send "Nova versão adicionada ao ticket ##{ticket.number} com sucesso"
         , '', 'put', corpo, 'application/json'
 
 
