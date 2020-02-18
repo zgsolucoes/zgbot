@@ -29,7 +29,10 @@ find_or_create_ticket = (msg, cb) ->
       cb(ticket)
 
 module.exports = (robot) ->
+  robot.messageRoom 'devops', "@here nova versão do zgbot acabou de subir"
+
   versao_rgx = /versao(\w*)\.add\(\s*['"]([^']*)['"]\s*,\s*['"]([^']*)['"]\s*(?:,\s*['"]([^']*)['"])?\s*\)/ig
+
   robot.hear versao_rgx, (msg) ->
     matches = versao_rgx.exec(msg.match[0])
 
