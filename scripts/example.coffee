@@ -79,7 +79,7 @@ module.exports = (robot) ->
         msg.send "Projeto já encontrando na lista, para adicioná-lo novamente remova do ticket atual: https://app.assembla.com/spaces/zg-devops/tickets/#{ticket.number}/details"
         msg.send 'Ou implemente o bot pra descobrir duplicatas e resolver sozinho por horário :mauro:'
       else
-        corpo = JSON.stringify({ticket: {description: "#{description?.trim() or ''}\n\n#{if horario then "\# Versão de #{horario}\n" else ""}\n\nServiço: #{projeto}\nAmbiente: #{ambientes}\nBranch: #{versao}"}})
+        corpo = JSON.stringify({ticket: {description: "#{description?.trim() or ''}\n\n#{if horario then "\# Versão de #{horario}\n" else ""}Serviço: #{projeto}\nAmbiente: #{ambientes}\nBranch: #{versao}"}})
         robot.assembla.api_call msg, "spaces/zg-devops/tickets/#{ticket.number}", (res, err, reso) ->
           if err
             console.error(err)
