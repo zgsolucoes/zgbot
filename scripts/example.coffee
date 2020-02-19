@@ -8,6 +8,20 @@
 #
 #   These are from the scripting documentation: https://github.com/github/hubot/blob/master/docs/scripting.md
 #
+
+# HTTP Actions
+POST_ACTION = 'post'
+PUT_ACTION = 'put'
+GET_ACTION = 'get'
+DELETE_ACTION = 'delete'
+
+# HTTP Content-type
+JSON_TYPE = 'application/json'
+XML_TYPE = 'application/xml'
+
+# Assembla status
+STATUS_A_FAZER = 24472231
+
 uncamelize = (str) ->
   str
     .replace(/([a-z])([A-Z])/g, '$1 $2')
@@ -16,17 +30,34 @@ uncamelize = (str) ->
 
 find_or_create_ticket = (msg, cb) ->
   msg.robot.assembla.api_call msg, "spaces/zg-devops/tickets?per_page=50&sort_order=desc&sort_by=created_on", (data) ->
-    tickets = data.filter((t) -> (t.summary.toLowerCase().indexOf('subir versão corretiva') > -1) and (new Date().getDate() == new Date(t.created_on).getDate()))
+    tickets = data.filter (t) ->
+      (t.summary.toLowerCase().indexOf('subir versão corretiva') > -1) and
+      (new Date().getDate() == new Date(t.created_on).getDate()) and
+      (t.status == 'Para Fazer')
+
     ticket = tickets[0]
 
     if tickets.length > 1
       msg.send "Foram encontrados mas de um ticket de subida de versão hoje, usando o ##{ticket.number}"
 
     if ticket == undefined
-      # TODO: criar ticket quando não houver
-      msg.send 'Parece que não foi criado nenhum ticket para a versão corretiva de hoje, vá lá crie um com o nome "Subir versão corretiva" e reenvie a mensagem'
+      create_new_ticket msg, (new_ticket) -> cb(new_ticket)
     else
       cb(ticket)
+
+create_new_ticket = (msg, cb) ->
+  body = JSON.stringify({ticket: {summary: 'Subir versão corretiva', status_id: STATUS_A_FAZER, milestone_id: 12627351}})
+
+  msg.robot.assembla.api_call msg, "spaces/zg-devops/tickets", (res, err, reso) ->
+    if err
+      console.error(err)
+      robot.messageRoom "devops", "Erro ao cadastrar novo ticket #{body}: #{JSON.stringify(res)}"
+      msg.send "Oops, aconteceu um erro ao cadastrar um novo ticket, peça ajuda aos devops ou faça na mão mesmo"
+    else
+      msg.send "Novo ticket adicionado com sucesso: #{JSON.stringify(res)}"
+      cb(res)
+  , '', POST_ACTION, body, JSON_TYPE
+
 
 module.exports = (robot) ->
   robot.messageRoom 'devops', "@here nova versão do zgbot acabou de subir"
@@ -42,13 +73,13 @@ module.exports = (robot) ->
     ambientes = matches[4]?.trim() or 'todos'
 
     ticket = find_or_create_ticket msg, (ticket) ->
-      description = ticket.description
+      description = ticket.description or ''
 
       if description.indexOf(projeto) > -1
         msg.send "Projeto já encontrando na lista, para adicioná-lo novamente remova do ticket atual: https://app.assembla.com/spaces/zg-devops/tickets/#{ticket.number}/details"
         msg.send 'Ou implemente o bot pra descobrir duplicatas e resolver sozinho por horário :mauro:'
       else
-        corpo = JSON.stringify({ ticket: { description: "#{description?.trim()}\n\n\# Versão de #{horario}\nServiço: #{projeto}\nAmbiente: #{ambientes}\nBranch: #{versao}\n" }})
+        corpo = JSON.stringify({ticket: {description: "#{description?.trim() or ''}\n\n#{if horario then "\# Versão de #{horario}\n" else ""}\n\nServiço: #{projeto}\nAmbiente: #{ambientes}\nBranch: #{versao}"}})
         robot.assembla.api_call msg, "spaces/zg-devops/tickets/#{ticket.number}", (res, err, reso) ->
           if err
             console.error(err)
