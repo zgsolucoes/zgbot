@@ -19,8 +19,10 @@ DELETE_ACTION = 'delete'
 JSON_TYPE = 'application/json'
 XML_TYPE = 'application/xml'
 
-# Assembla status
+# Assembla variables
 STATUS_A_FAZER = 24472231
+SUSTENTACAO = 12627341
+EDMILSON_USER_ID = 'dxi_DqEjSr6l_cacwqjQXA'
 
 uncamelize = (str) ->
   str
@@ -46,7 +48,8 @@ find_or_create_ticket = (msg, cb) ->
       cb(ticket)
 
 create_new_ticket = (msg, cb) ->
-  body = JSON.stringify({ticket: {summary: 'Subir versão corretiva', status_id: STATUS_A_FAZER, milestone_id: 12627351}})
+  now = new Date().toJSON().slice(0,10).split('-').reverse().join('/')
+  body = JSON.stringify({ticket: {summary: 'Subir versão corretiva '.concat(now), status_id: STATUS_A_FAZER, milestone_id: SUSTENTACAO, assigned_to_id: EDMILSON_USER_ID}})
 
   msg.robot.assembla.api_call msg, "spaces/zg-devops/tickets", (res, err, reso) ->
     if err
@@ -54,7 +57,7 @@ create_new_ticket = (msg, cb) ->
       robot.messageRoom "devops", "Erro ao cadastrar novo ticket #{body}: #{JSON.stringify(res)}"
       msg.send "Oops, aconteceu um erro ao cadastrar um novo ticket, peça ajuda aos devops ou faça na mão mesmo"
     else
-      msg.send "Novo ticket adicionado com sucesso: #{JSON.stringify(res)}"
+      msg.send "Novo ticket adicionado com sucesso: https://app.assembla.com/spaces/zg-devops/tickets/#{res.number}/details"
       cb(res)
   , '', POST_ACTION, body, JSON_TYPE
 
