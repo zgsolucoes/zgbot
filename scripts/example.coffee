@@ -48,7 +48,7 @@ find_or_create_ticket = (msg, cb) ->
       cb(ticket)
 
 create_new_ticket = (msg, cb) ->
-  now = (new Date().toLocaleString('pt-BR').split(' '))[0]
+  now = new Date().toJSON().slice(0,10).split('-').reverse().join('/')
   body = JSON.stringify({ticket: {summary: 'Subir versão corretiva '.concat(now), status_id: STATUS_A_FAZER, milestone_id: SUSTENTACAO, assigned_to_id: EDMILSON_USER_ID}})
 
   msg.robot.assembla.api_call msg, "spaces/zg-devops/tickets", (res, err, reso) ->
