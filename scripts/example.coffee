@@ -61,9 +61,12 @@ create_new_ticket = (msg, cb) ->
       cb(res)
   , '', POST_ACTION, body, JSON_TYPE
 
+avisou_subida = false
 
 module.exports = (robot) ->
-  robot.messageRoom 'devops', "@here nova versão do zgbot acabou de subir"
+  if not avsisou_subida
+    robot.messageRoom 'devops', "@here nova versão do zgbot acabou de subir"
+    avsisou_subida = true
 
   versao_rgx = /versao(\w*)\.add\(\s*['"]([^']*)['"]\s*,\s*['"]([^']*)['"]\s*(?:,\s*['"]([^']*)['"])?\s*\)/ig
 
