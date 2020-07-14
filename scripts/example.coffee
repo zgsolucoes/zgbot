@@ -92,6 +92,9 @@ module.exports = (robot) ->
             msg.send "Nova versão adicionada ao ticket ##{ticket.number} com sucesso"
         , '', 'put', corpo, 'application/json'
 
+  robot.hear /(desgraça|merda|bosta)/, (msg) ->
+    msg.send "Olha a boca @#{msg.message.user.name}!"
+
 
   # robot.hear /badger/i, (res) ->
   #   res.send "Badgers? BADGERS? WE DON'T NEED NO STINKIN BADGERS"
